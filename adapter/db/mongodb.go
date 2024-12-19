@@ -1,9 +1,9 @@
 package db
 
 import (
+    "log"
     "context"
     "votacao-paredao-bbb/core/models"
-    "votacao-paredao-bbb/core/ports"
     "go.mongodb.org/mongo-driver/v2/mongo"
     "go.mongodb.org/mongo-driver/v2/mongo/options"
     "go.mongodb.org/mongo-driver/v2/bson"
@@ -39,10 +39,12 @@ func NovoVotoMongoRepository(client *mongo.Client) *VotoMongoRepository {
 }
 
 func ConectarMongoDB(uri string) (*mongo.Client, error) {
-    client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+    clientOptions := options.Client().ApplyURI(uri)
+
+    client, err := mongo.Connect(clientOptions)
     if err != nil {
-        return nil, err
+        log.Fatal(err)
     }
-    err = client.Connect(context.Background())
+    
     return client, err
 }

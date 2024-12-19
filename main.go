@@ -1,6 +1,7 @@
 package main
 
 import (
+    "os"
     "log"
     "votacao-paredao-bbb/adapter/db"
     "votacao-paredao-bbb/adapter/queue"
@@ -9,17 +10,21 @@ import (
 )
 
 func main() {
-    client, err := db.ConectarMongoDB("mongodb://localhost:27017")
-    if err != nil {
-        log.Fatal(err)
-    }
+    rabbitmqURL := os.Getenv("RABBITMQ_URL")
+	mongoURL := os.Getenv("MONGO_URL")
 
-    rabbitMQ, err := queue.NovoRabbitMQ("amqp://guest:guest@localhost:5672/", "votos")
+    client, err := db.ConectarMongoDB(mongoURL)
     if err != nil {
         log.Fatal(err)
     }
 
     votoRepo := db.NovoVotoMongoRepository(client)
+
+    rabbitMQ, err := queue.NovoRabbitMQ(rabbitmqURL, "votos", votoRepo)
+    if err != nil {
+        log.Fatal(err)
+    }
+
     votoService := services.NovoVotoService(votoRepo, rabbitMQ)
 
     r := router.SetupRouter(votoService)

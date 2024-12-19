@@ -1,7 +1,6 @@
 package services
 
 import (
-    "errors"
     "time"
     "votacao-paredao-bbb/core/models"
     "votacao-paredao-bbb/core/ports"
