@@ -9,10 +9,11 @@ import (
 
 type VotoService struct {
     VotoRepo ports.VotoRepository
+    VotoQueue ports.VotoQueue
 }
 
-func NovoVotoService(votoRepo ports.VotoRepository) *VotoService {
-    return &VotoService{VotoRepo: votoRepo}
+func NovoVotoService(votoRepo ports.VotoRepository, votoQueue ports.VotoQueue) *VotoService {
+    return &VotoService{VotoRepo: votoRepo, VotoQueue: votoQueue,}
 }
 
 func (vs *VotoService) RegistrarVoto(participante string) error {
@@ -21,7 +22,12 @@ func (vs *VotoService) RegistrarVoto(participante string) error {
         Timestamp:    time.Now(),
     }
 
-    return vs.VotoRepo.SalvarVoto(voto)
+    err := vs.VotoQueue.EnfileirarVoto(voto)
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
 
 func (vs *VotoService) ObterResultadosGeral() (map[string]int, error) {
@@ -35,18 +41,4 @@ func (vs *VotoService) ObterResultadosGeral() (map[string]int, error) {
         resultados[voto.Participante]++
     }
     return resultados, nil
-}
-
-func (vs *VotoService) ObterVotosPorHora() (map[string]int, error) {
-    votos, err := vs.VotoRepo.ObterVotos()
-    if err != nil {
-        return nil, err
-    }
-
-    resultadosPorHora := make(map[string]int)
-    for _, voto := range votos {
-        hora := voto.Timestamp.Format("2006-01-02 15")
-        resultadosPorHora[hora]++
-    }
-    return resultadosPorHora, nil
 }

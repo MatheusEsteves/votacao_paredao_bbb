@@ -8,3 +8,8 @@ type VotoRepository interface {
     SalvarVoto(voto models.Voto) error
     ObterVotos() ([]models.Voto, error)
 }
+
+type VotoQueue interface {
+    EnfileirarVoto(voto models.Voto) error
+    ConsumirFila() error
+}
