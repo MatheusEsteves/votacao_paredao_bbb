@@ -1,6 +1,7 @@
 package handlers
 
 import (
+    "log"
     "github.com/gin-gonic/gin"
     "votacao-paredao-bbb/core/services"
 )
@@ -30,6 +31,7 @@ func (vh *VotoHandler) RegistrarVoto(c *gin.Context) {
 func (vh *VotoHandler) ObterResultados(c *gin.Context) {
     resultados, err := vh.VotoService.ObterResultadosGeral()
     if err != nil {
+        log.Printf("Erro ao obter resultados : %v", err)
         c.JSON(500, gin.H{"error": "Erro ao obter resultados"})
         return
     }

@@ -10,6 +10,8 @@ import (
 )
 
 func main() {
+    log.Printf("Inicialização da app golang")
+
     rabbitmqURL := os.Getenv("RABBITMQ_URL")
 	mongoURL := os.Getenv("MONGO_URL")
 
@@ -19,8 +21,12 @@ func main() {
     }
 
     votoRepo := db.NovoVotoMongoRepository(client)
-
     rabbitMQ, err := queue.NovoRabbitMQ(rabbitmqURL, "votos", votoRepo)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    err = rabbitMQ.ConsumirFila()
     if err != nil {
         log.Fatal(err)
     }

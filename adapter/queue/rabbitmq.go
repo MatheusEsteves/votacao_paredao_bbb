@@ -15,6 +15,8 @@ type RabbitMQ struct {
 }
 
 func NovoRabbitMQ(amqpURI, queueName string, votoRepo ports.VotoRepository) (*RabbitMQ, error) {
+    log.Printf("Iniciando criação do canal para o RabbitMQ")
+
     conn, err := amqp.Dial(amqpURI)
     if err != nil {
         return nil, err
@@ -24,6 +26,8 @@ func NovoRabbitMQ(amqpURI, queueName string, votoRepo ports.VotoRepository) (*Ra
     if err != nil {
         return nil, err
     }
+
+    log.Println("Conectado ao RabbitMQ com sucesso!")
 
     queue, err := channel.QueueDeclare(
         queueName,
@@ -70,20 +74,29 @@ func (r *RabbitMQ) ConsumirFila() error {
         nil,
     )
     if err != nil {
+        log.Printf("Erro ao tentar consumir fila")
         return err
     }
 
-    for msg := range msgs {
-        var voto models.Voto
-        err := json.Unmarshal(msg.Body, &voto)
+    go func() {
+        for msg := range msgs {
+            var voto models.Voto
+            err := json.Unmarshal(msg.Body, &voto)
 
-        if err != nil {
-            log.Printf("Erro ao processar voto: %v", err)
-            continue
+            if err != nil {
+                log.Printf("Erro ao processar voto: %v", err)
+                continue
+            }
+
+            log.Printf("Novo voto recebido para o participante %v", voto.Participante)
+            
+            err = r.VotoRepo.SalvarVoto(voto)
+            if err != nil {
+                log.Printf("Erro ao salvar voto na base: %v", err)
+                continue
+            }
         }
-        
-		r.VotoRepo.SalvarVoto(voto)
-    }
+    }()
 
     return nil
 }
